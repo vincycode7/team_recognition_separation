@@ -31,15 +31,17 @@ class BaseTeamPlayerSeperator:
 
         # Inference
         results = self.model(img)
-        results.save()
+        # results.save()
         # results = self.model(img)
         df_result = results.pandas().xyxy[0] # convert result to df
         df_result = df_result[df_result['class'] == 0]
         df_result = df_result[df_result['confidence'] >= 0.65]
         return df_result
 
-    def seperator(num_of_seperators=2, color_of_seperators=['yw','be'],save_seperator=True,append_to_folder="player"):
-        pass
+    def seperator(self,image,df_result,num_of_seperators=2, color_of_seperators=['yw','be'],save_seperator=True,append_to_folder="player"):
+        x, y, w, h = int(df_result.iloc[0]['xmin']), int(df_result.iloc[0]['ymin']), int(df_result.iloc[0]['xmax']), int(df_result.iloc[0]['ymax'])
+        roi_color = image[y:h, x:w]
+        cv2.imshow('Frame',roi_color)
 
     def save_seperators():
         pass
@@ -74,18 +76,8 @@ class ImagePlayerSeperator(BaseTeamPlayerSeperator):
     def image_inference(self,image, is_url=False):
         # Read the image
         image = cv2.imread(image) if is_url else image #expecting a numpy array or url to the image
-        image_width, image_height = image.shape[0],image.shape[1]
         df_result = self.detect_humans(image)
-        x, y, w, h = df_result.iloc[0]['xmin'], df_result.iloc[0]['ymin'], df_result.iloc[0]['xmax'], df_result.iloc[0]['ymax']
-        left,top, width,height = self.detect_left_top_width_height(x, y, w, h,image_width, image_height)
-        print(f"image shape {image.shape}")
-        print(f"x, y, w, h: {x},{y}, {w},{h}")
-        print(f"left,top, width,height: {left},{top}, {width},{height}")
-        # cv2.imshow('Frame',image[y:h,x:w])
-        print(f"image shap")
-        roi_color = image[top:top+height, left:left+width]
-        cv2.imshow('Frame',roi_color)
-        df_seperators = self.seperator(df_result)
+        df_seperators = self.seperator(image,df_result)
         return df_result, df_seperators
 
 
