@@ -1,0 +1,7 @@
+{
+    "yw":{"name":"yellow", "matching":["yellow","deepskyblue","turquoise","aqua"]},
+    "be":{"name":"blue", "matching":["blue","darkgray","dimgray","black","gray","silver","darkolivegreen"]},
+    "gn":{"name":"green", "matching":["green","seagreen"]},
+    "wh":{"name":"white", "matching":["white"]},
+    "rd":{"name":"red","matching":["red","darkslategray","black"]}
+}
