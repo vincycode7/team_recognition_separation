@@ -1,6 +1,4 @@
 import numpy as np
-from traitlets import default
-from zmq import device
 import cv2
 import torch
 import webcolors
@@ -13,9 +11,10 @@ with open("color_seperator_mapper.json", 'r') as openfile:
     # Reading from json file
     color_seperator_mapper = json.load(openfile)
 class BaseTeamPlayerSeperator:
-    def __init__(self,pretrained_model,url_to_model):
+    def __init__(self,pretrained_model,url_to_model,display_result_to_gui):
         self.pretrained_model = pretrained_model
         self.url_to_model = url_to_model
+        self.display_result_to_gui = display_result_to_gui
         self.load_base_algorithm()
         self.check_folder_if_exist("./output") # Check the output folder if not_exist
 
@@ -116,7 +115,8 @@ class BaseTeamPlayerSeperator:
             image = cv2.putText(img_bar, f'{index+1}, col_name: {col_name}',(5+200*index, 200-10),cv2.FONT_ITALIC,0.5,(255,0,0),1,cv2.LINE_AA)
 
         
-        cv2.imshow('Dominant colours', img_bar)
+        if self.display_result_to_gui:
+            cv2.imshow('Dominant colours', img_bar)
 
         return closest_colors, img_bar
 
@@ -124,7 +124,8 @@ class BaseTeamPlayerSeperator:
         for each_res in range(df_result.shape[0]):
             x, y, w, h = int(df_result.iloc[each_res]['xmin']), int(df_result.iloc[each_res]['ymin']), int(df_result.iloc[each_res]['xmax']), int(df_result.iloc[each_res]['ymax'])
             roi_color = image[y:h, x:w]
-            cv2.imshow('Detection Frame',roi_color)
+            if self.display_result_to_gui:
+                cv2.imshow('Detection Frame',roi_color)
             closest_colors, color_bars_and_names = self.extract_dominant_color(roi_color=roi_color,num_of_clusters=4)
             for each_seperator in color_of_seperators:
                 found_match = False
@@ -210,8 +211,8 @@ class BaseTeamPlayerSeperator:
         print(results.pandas().xyxy[0])
 
 class ImagePlayerSeperator(BaseTeamPlayerSeperator):
-    def __init__(self,pretrained_model,url_to_model):
-        super(BaseTeamPlayerSeperator,self).__init__( pretrained_model=pretrained_model,url_to_model=url_to_model)
+    def __init__(self,pretrained_model,url_to_model,display_result_to_gui):
+        super(BaseTeamPlayerSeperator,self).__init__( pretrained_model=pretrained_model,url_to_model=url_to_model,display_result_to_gui=display_result_to_gui)
 
     def image_inference(self,image, is_url=False):
         # Read the image
@@ -222,8 +223,8 @@ class ImagePlayerSeperator(BaseTeamPlayerSeperator):
 
 
 class VideoPlayerSeperator(ImagePlayerSeperator):
-    def __init__(self,pretrained_model,url_to_model):
-        super(ImagePlayerSeperator,self).__init__( pretrained_model=pretrained_model,url_to_model=url_to_model )
+    def __init__(self,pretrained_model,url_to_model,display_result_to_gui):
+        super(ImagePlayerSeperator,self).__init__( pretrained_model=pretrained_model,url_to_model=url_to_model,display_result_to_gui=display_result_to_gui )
 
     def video_inference(self,video_file):
         cap = cv2.VideoCapture(video_file)
@@ -239,7 +240,8 @@ class VideoPlayerSeperator(ImagePlayerSeperator):
             ret, frame = cap.read()
             if ret == True:
                 # Display the resulting frame
-                cv2.imshow('Base Frame',frame)
+                if self.display_result_to_gui:
+                    cv2.imshow('Base Frame',frame)
 
                 # Detect positions of human in image if any exist
                 df_result, df_seperators = self.image_inference(frame)
